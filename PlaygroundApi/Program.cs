@@ -1,12 +1,23 @@
+using Medallion.Threading;
+using Medallion.Threading.FileSystem;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlaygroundApi.Database;
 using PlaygroundApi.Database.Entities;
+using PlaygroundApi.OutboxPattern;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// https://github.com/madelson/DistributedLock
+var lockFileDirectory = new DirectoryInfo(Environment.CurrentDirectory); // choose where the lock files will live
+builder.Services.AddSingleton<IDistributedLockProvider>(_ => new FileDistributedSynchronizationProvider(lockFileDirectory));
+
+builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+builder.Services.AddOutboxPattern<NotesDbContext>();
+builder.Services.AddSingleton<IOutboxMessageSender, NoopOutboxMessageSender>();
 builder.Services.AddDbContext<NotesDbContext>((sp, c) => c
-    .UseInMemoryDatabase("notesDb"));
+    .UseInMemoryDatabase("notesDb")
+    .RegisterOutbox<NotesDbContext>(sp));
 
 var app = builder.Build();
 
@@ -20,6 +31,10 @@ app.MapPost("/notes", async ([FromBody] NoteDto dto, [FromServices] NotesDbConte
         CreatedAt = DateTime.Now,
     };
     db.Notes.Add(note);
+    db.OutboxMessages.Add(new OutboxMessage
+    {
+        Content = $"New Note: {dto.Text}",
+    });
     await db.SaveChangesAsync();
     return TypedResults.Ok(note);
 });
