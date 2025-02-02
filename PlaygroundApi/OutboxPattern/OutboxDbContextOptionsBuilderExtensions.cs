@@ -6,7 +6,7 @@ public static class OutboxDbContextOptionsBuilderExtensions
 {
     public static DbContextOptionsBuilder RegisterOutbox<TDbContext>(this DbContextOptionsBuilder builder,
         IServiceProvider serviceProvider)
-        where TDbContext : IOutboxDbContext
+        where TDbContext : DbContext, IOutboxDbContext
     {
         var outboxProcessor = serviceProvider.GetRequiredService<OutboxProcessor<TDbContext>>();
         var timeProvider = serviceProvider.GetRequiredService<TimeProvider>();

@@ -4,9 +4,9 @@ namespace PlaygroundApi.OutboxPattern;
 
 public class NoopOutboxMessageSender(ILogger<NoopOutboxMessageSender> logger) : IOutboxMessageSender
 {
-    public Task SendAsync(OutboxMessage message, CancellationToken cancellationToken)
+    public Task SendAsync(OutboxMessageEntity messageEntity, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Fake-Sending outbox message: {Message}", JsonSerializer.Serialize(message));
+        logger.LogInformation("Fake-Sending outbox message: {Message}", JsonSerializer.Serialize(messageEntity));
         return Task.CompletedTask;
     }
 }

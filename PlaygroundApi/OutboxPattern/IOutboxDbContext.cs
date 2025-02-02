@@ -4,6 +4,5 @@ namespace PlaygroundApi.OutboxPattern;
 
 public interface IOutboxDbContext
 {
-    DbSet<OutboxMessage> OutboxMessages { get; set; }
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    ICollection<IMessage> OutboxMessages { get; } // TODO: use custom class, that wraps list and only exposes a public add method
 }

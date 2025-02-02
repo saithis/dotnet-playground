@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlaygroundApi.Database;
 using PlaygroundApi.Database.Entities;
+using PlaygroundApi.Events;
 using PlaygroundApi.OutboxPattern;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,9 +32,10 @@ app.MapPost("/notes", async ([FromBody] NoteDto dto, [FromServices] NotesDbConte
         CreatedAt = DateTime.Now,
     };
     db.Notes.Add(note);
-    db.OutboxMessages.Add(new OutboxMessage
+    db.OutboxMessages.Add(new NoteAddedEvent
     {
-        Content = $"New Note: {dto.Text}",
+        Id = note.Id,
+        Text = $"New Note: {dto.Text}",
     });
     await db.SaveChangesAsync();
     return TypedResults.Ok(note);

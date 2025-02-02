@@ -8,7 +8,7 @@ public class OutboxProcessor<TDbContext>(
     IDistributedLockProvider distributedLockProvider, 
     TimeProvider timeProvider,
     ILogger<OutboxProcessor<TDbContext>> logger) 
-    : BackgroundService where TDbContext : IOutboxDbContext
+    : BackgroundService where TDbContext : DbContext, IOutboxDbContext
 {
     private readonly TimeSpan _dbCheckDelay = TimeSpan.FromSeconds(60);
     private readonly TimeSpan _restartDelay = TimeSpan.FromSeconds(5);
@@ -76,7 +76,7 @@ public class OutboxProcessor<TDbContext>(
             while (true)
             {
                 logger.LogDebug("Checking outbox for unsent messages");
-                var messages = await dbContext.OutboxMessages
+                var messages = await dbContext.Set<OutboxMessageEntity>()
                     .Where(x => x.ProcessedAt == null)
                     .OrderBy(x => x.CreatedAt)
                     .Take(BatchSize)

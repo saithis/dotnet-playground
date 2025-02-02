@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace PlaygroundApi.OutboxPattern;
 
 public class OutboxTriggerInterceptor<TDbContext>(OutboxProcessor<TDbContext> outboxProcessor, TimeProvider timeProvider) 
-    : SaveChangesInterceptor where TDbContext : IOutboxDbContext
+    : SaveChangesInterceptor where TDbContext : DbContext, IOutboxDbContext
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
@@ -19,16 +19,22 @@ public class OutboxTriggerInterceptor<TDbContext>(OutboxProcessor<TDbContext> ou
             return ValueTask.FromResult(result);
         }
 
-        EntityEntry<OutboxMessage>[] newMessages = context
-            .ChangeTracker
-            .Entries<OutboxMessage>()
-            .Where(e => e.State == EntityState.Added)
-            .ToArray();
+        if (context is not IOutboxDbContext outboxDbContext)
+            throw new InvalidOperationException("Expected IOutboxDbContext");
 
-        foreach (EntityEntry<OutboxMessage> entry in newMessages)
+        foreach (var message in outboxDbContext.OutboxMessages)
         {
-            entry.Entity.CreatedAt = timeProvider.GetUtcNow();
+            var outboxMessage = new OutboxMessageEntity
+            {
+                // TODO: extract message name, topic and routeKey
+                // TODO: make serializer overwriteable
+                Type = message.GetType().FullName!,
+                Content = JsonSerializer.Serialize<object>(message),
+                CreatedAt = timeProvider.GetUtcNow(),
+            };
+            context.Set<OutboxMessageEntity>().Add(outboxMessage);
         }
+        outboxDbContext.OutboxMessages.Clear();
 
         return ValueTask.FromResult(result);
     }
@@ -42,7 +48,7 @@ public class OutboxTriggerInterceptor<TDbContext>(OutboxProcessor<TDbContext> ou
         if (eventData.EntitiesSavedCount == 0)
             return result;
 
-        var outboxMessages = eventData.Context?.ChangeTracker.Entries<OutboxMessage>() ?? [];
+        var outboxMessages = eventData.Context?.ChangeTracker.Entries<OutboxMessageEntity>() ?? [];
         if (outboxMessages.Any(e => e.Entity.ProcessedAt == null))
         {
             await outboxProcessor.ScheduleNowAsync();

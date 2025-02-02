@@ -2,5 +2,5 @@
 
 public interface IOutboxMessageSender
 {
-    Task SendAsync(OutboxMessage message, CancellationToken cancellationToken);
+    Task SendAsync(OutboxMessageEntity messageEntity, CancellationToken cancellationToken);
 }
