@@ -92,7 +92,7 @@ public class OutboxProcessor<TDbContext>(
                     {
                         logger.LogInformation("Processing message '{Id}'", message.Id);
                         await sender.SendAsync(message, stoppingToken);
-                        message.ProcessedAt = DateTime.UtcNow;
+                        message.MarkAsProcessed(timeProvider);
                     }
                 }
                 finally

@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace PlaygroundApi.OutboxPattern;
@@ -24,14 +23,7 @@ public class OutboxTriggerInterceptor<TDbContext>(OutboxProcessor<TDbContext> ou
 
         foreach (var message in outboxDbContext.OutboxMessages)
         {
-            var outboxMessage = new OutboxMessageEntity
-            {
-                // TODO: extract message name, topic and routeKey
-                // TODO: make serializer overwriteable
-                Type = message.GetType().FullName!,
-                Content = JsonSerializer.Serialize<object>(message),
-                CreatedAt = timeProvider.GetUtcNow(),
-            };
+            var outboxMessage = OutboxMessageEntity.Create(message, timeProvider);
             context.Set<OutboxMessageEntity>().Add(outboxMessage);
         }
         outboxDbContext.OutboxMessages.Clear();
