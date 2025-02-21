@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="3.9.1" />
+      <PackageReference Include="WolverineFx.RabbitMQ" Version="3.9.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WolverineConventions\WolverineConventions.csproj" />
+    </ItemGroup>
+
+</Project>
