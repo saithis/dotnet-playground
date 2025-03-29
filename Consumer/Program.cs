@@ -30,7 +30,7 @@ builder.UseWolverine(opts =>
     opts.ListenToRabbitQueue("test.listen-all")
         .ProcessInline();
 
-    opts.Discovery.CustomizeMessageDiscovery(c => { c.Includes.WithAttribute<PublishMessageAttribute>(); });
+    opts.Discovery.CustomizeMessageDiscovery(c => { c.Includes.WithAttribute<RabbitExchangeAttribute>(); });
 
     // This will disable the conventional local queue routing that would take precedence over other conventional routing
     opts.Policies.DisableConventionalLocalRouting();
@@ -59,21 +59,23 @@ public class Handler : IWolverineHandler
     }
 }
 
-[PublishMessage("my-producer", "my-message")]
+// AsyncApi -> all messages that don't have the service name as prefix, are receive. Others are send.
+
+[RabbitExchange("my-producer", "my-message")]
 [MessageIdentity("my-messagexxx")]
 public record MyMessage : IMessage
 {
     public Guid Id { get; init; }
 }
 
-[PublishMessage("my-producer", "my-message2")]
+[RabbitExchange("my-producer", "my-message2")]
 [MessageIdentity("my-message2")]
 public record MyMessage2 : IMessage
 {
     public Guid Id { get; init; }
 }
 
-[PublishMessage("my-producer2", "my-other-message")]
+[RabbitExchange("my-producer2", "my-other-message")]
 [MessageIdentity("my-other-message")]
 public record MyOtherMessage : IMessage
 {

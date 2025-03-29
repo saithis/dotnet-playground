@@ -48,21 +48,21 @@ app.MapGet("/send", async (IMessageBus bus) =>
 
 app.Run();
 
-[PublishMessage("my-producer", "my-message")]
+[RabbitExchange("my-producer", "my-message")]
 [MessageIdentity("my-message")]
 public record MyMessage : IMessage
 {
     public Guid Id { get; init; }
 }
 
-[PublishMessage("my-producer", "my-message2")]
+[RabbitExchange("my-producer", "my-message2")]
 [MessageIdentity("my-message2")]
 public record MyMessage2 : IMessage
 {
     public Guid Id { get; init; }
 }
 
-[PublishMessage("my-producer2", "my-other-message")]
+[RabbitExchange("my-producer2", "my-other-message")]
 [MessageIdentity("my-other-message")]
 public record MyOtherMessage : IMessage
 {

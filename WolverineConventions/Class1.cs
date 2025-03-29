@@ -9,7 +9,7 @@ using ExchangeType = Wolverine.RabbitMQ.ExchangeType;
 namespace WolverineConventions;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class PublishMessageAttribute(string exchangeName, string? routingKey = null) : Attribute
+public class RabbitExchangeAttribute(string exchangeName, string? routingKey = null) : Attribute
 {
     public string ExchangeName { get; set; } = exchangeName;
     public string? RoutingKey { get; set; } = routingKey;
@@ -44,10 +44,10 @@ public static class WolverineHelpers
             .AutoProvision();
 
         HashSet<string> exchanges = new();
-        IEnumerable<Type> messageTypes = GetTypesWithAttribute(zopts.AssemblytoScan, typeof(PublishMessageAttribute));
+        IEnumerable<Type> messageTypes = GetTypesWithAttribute(zopts.AssemblytoScan, typeof(RabbitExchangeAttribute));
         foreach (Type messageType in messageTypes)
         {
-            var publishInfo = messageType.GetCustomAttribute<PublishMessageAttribute>()!;
+            var publishInfo = messageType.GetCustomAttribute<RabbitExchangeAttribute>()!;
             exchanges.Add(publishInfo.ExchangeName);
 
             if (publishInfo.RoutingKey != null)
