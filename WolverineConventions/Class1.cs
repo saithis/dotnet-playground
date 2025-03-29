@@ -48,6 +48,8 @@ public static class WolverineHelpers
         foreach (Type messageType in messageTypes)
         {
             var publishInfo = messageType.GetCustomAttribute<RabbitExchangeAttribute>()!;
+            // TODO: if starts with service name of current service, then declare exchange and add to publish asyncapi
+            // otherwise: declare queue binding and add to consume asyncapi
             exchanges.Add(publishInfo.ExchangeName);
 
             if (publishInfo.RoutingKey != null)
