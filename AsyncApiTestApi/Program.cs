@@ -6,47 +6,105 @@
 
 #endregion
 
+using System.Net.Mime;
 using AsyncApiTestApi;
 using Saunter;
 using Saunter.AsyncApiSchema.v2;
-using Wolverine;
-using Wolverine.Attributes;
-using Wolverine.RabbitMQ;
-using Wolverine.RabbitMQ.Internal;
+using SlimMessageBus;
+using SlimMessageBus.Host;
+using SlimMessageBus.Host.AsyncApi;
+using SlimMessageBus.Host.RabbitMQ;
+using SlimMessageBus.Host.Serialization.Json;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<MessageBrokerEvents>();
 
-builder.UseWolverine(opts =>
+builder.Services.AddSlimMessageBus(mbb =>
 {
-    RabbitMqTransportExpression rabbit = opts.UseRabbitMq(r =>
+    mbb.WithProviderRabbitMQ(cfg  =>
     {
-        r.HostName = "localhost";
-        r.UserName = "guest";
-        r.Password = "guest";
-    });
+        cfg.ConnectionString = "amqp://guest:guest@localhost/";
 
-    rabbit.DeclareExchange(MessageBrokerEvents.PublicExchangeName, x => { x.ExchangeType = ExchangeType.Topic; }).AutoProvision();
-
-    rabbit.DeclareQueue(MessageBrokerEvents.ConsumeQueue, c =>
+        // Fine tune the underlying RabbitMQ.Client:
+        cfg.ConnectionFactory.ClientProvidedName = $"MyService_{Environment.MachineName}";
+        
+        // All exchanges declared on producers will be durable by default
+        cfg.UseExchangeDefaults(durable: true);
+        
+        cfg.UseDeadLetterExchangeDefaults(durable: false, autoDelete: false, exchangeType: ExchangeType.Direct, routingKey: string.Empty);
+        cfg.UseQueueDefaults(durable: true);
+        
+        // All messages will get the ContentType message property assigned
+        cfg.UseMessagePropertiesModifier((m, p) =>
         {
-            c.BindExchange(MessageBrokerEvents.PublicExchangeName, "#"); // read all our messages again for testing stuff
-        })
-        .AutoProvision();
+            p.ContentType = MediaTypeNames.Application.Json;
+        });
 
-    opts.ListenToRabbitQueue(MessageBrokerEvents.ConsumeQueue)
-        .ProcessInline();
+        cfg.UseTopologyInitializer((channel, applyDefaultTopology) =>
+        {
+            channel.ExchangeDelete(MessageBrokerEvents.PublicExchangeName, false);
+            channel.QueueDelete(MessageBrokerEvents.ConsumeQueue, false, false);
+            
+            
+            // apply default SMB inferred topology
+            applyDefaultTopology();
+        });
+    });
+    
+    mbb.AddServicesFromAssemblyContaining<MessageBrokerEvents>();
+    mbb.AddJsonSerializer();
+    mbb.AddAspNet();
+    mbb.AddAsyncApiDocumentGenerator();
 
-    opts.Discovery.CustomizeMessageDiscovery(c => { c.Includes.WithAttribute<MessageIdentityAttribute>(); });
-
-    opts.PublishMessage<Notification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-    opts.PublishMessage<ReconsumedNotification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-    opts.PublishMessage<InboxMessage>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-    opts.PublishMessage<CommandToOtherService>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-
-    // This will disable the conventional local queue routing that would take precedence over other conventional routing
-    opts.Policies.DisableConventionalLocalRouting();
+    RegisterPublicEvent<Notification>(Notification.RoutingKey);
+    RegisterPublicEvent<ReconsumedNotification>(ReconsumedNotification.RoutingKey);
+    RegisterPublicEvent<InboxMessage>(InboxMessage.RoutingKey);
+    RegisterPublicEvent<CommandToOtherService>(CommandToOtherService.RoutingKey);
+    
+    RegisterSubscribe<ReconsumedNotification, MessageBrokerEvents>(ReconsumedNotification.RoutingKey, MessageBrokerEvents.PublicExchangeName, ReconsumedNotification.RoutingKey);
+    RegisterInbox<InboxMessage, MessageBrokerEvents>(InboxMessage.RoutingKey, MessageBrokerEvents.ConsumeQueue);
+    
+    void RegisterSubscribe<TMessage, TConsumer>(string messageId, string fromExchange, string? routingKey = null)
+        where TMessage : class
+        where TConsumer : class, IConsumer<TMessage>
+    {
+        mbb.Consume<TMessage>(x => x
+            // Use the subscriber queue, do not auto delete
+            .Queue(MessageBrokerEvents.ConsumeQueue, autoDelete: false)
+            .ExchangeBinding(fromExchange, routingKey)
+            // The queue declaration in RabbitMQ will have a reference to the dead letter exchange and the DL exchange will be created
+            .DeadLetterExchange($"{MessageBrokerEvents.ConsumeQueue}-dlq", exchangeType: ExchangeType.Direct)
+            .WithConsumer<TConsumer>());
+    }
+    
+    void RegisterInbox<TMessage, TConsumer>(string messageId, string queueName)
+        where TMessage : class
+        where TConsumer : class, IConsumer<TMessage>
+    {
+        mbb.Consume<TMessage>(x => x
+            // Use the subscriber queue, do not auto delete
+            .Queue(queueName, autoDelete: false, durable: true)
+            .Path(queueName)
+            // The queue declaration in RabbitMQ will have a reference to the dead letter exchange and the DL exchange will be created
+            .DeadLetterExchange($"{MessageBrokerEvents.ConsumeQueue}-dlq", exchangeType: ExchangeType.Direct)
+            .WithConsumer<TConsumer>());
+    }
+    
+    void RegisterPublicEvent<T>(string messageId)
+        where T : class
+    {
+        mbb.Produce<T>(x => x
+            // Will declare an orders exchange of type Fanout
+            .Exchange(MessageBrokerEvents.PublicExchangeName, exchangeType: ExchangeType.Topic)
+            // Will use a routing key provider that for a given message will take it's Id field
+            .RoutingKeyProvider((m, p) => messageId)
+            // Will use
+            .MessagePropertiesModifier((m, p) =>
+            {
+                p.MessageId = messageId;
+            }));
+    }
 });
 
 // Add Saunter to the application services. 
@@ -72,6 +130,7 @@ builder.Services.AddAsyncApiSchemaGeneration(options =>
         },
     };
 });
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
 WebApplication app = builder.Build();

@@ -4,37 +4,30 @@
 // </copyright>
 #endregion
 
-using Saunter.Attributes;
-using Wolverine;
-using Wolverine.Attributes;
 
 namespace AsyncApiTestApi;
 
 
-[MessageIdentity(Notification.RoutingKey)]
-public record Notification : IMessage
+public record Notification
 {
     public const string RoutingKey = "notification";
 
     public Guid Id { get; init; }
 }
 
-[MessageIdentity(RoutingKey)]
-public record ReconsumedNotification : IMessage
+public record ReconsumedNotification
 {
     public const string RoutingKey = "reconsumed-notification";
     public Guid Id { get; init; }
 }
 
-[MessageIdentity(InboxMessage.RoutingKey)]
-public record InboxMessage : IMessage
+public record InboxMessage
 {
     public const string RoutingKey = "inbox-message";
     public Guid Id { get; init; }
 }
 
-[MessageIdentity(RoutingKey)]
-public record CommandToOtherService : IMessage
+public record CommandToOtherService
 {
     public const string RoutingKey = "command-to-other-service";
     public Guid Id { get; init; }
