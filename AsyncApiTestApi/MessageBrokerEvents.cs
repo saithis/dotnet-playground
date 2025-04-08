@@ -4,26 +4,49 @@
 // </copyright>
 #endregion
 
+using Saunter.Attributes;
+using Wolverine;
+
 namespace AsyncApiTestApi;
 
-public abstract class MessageBrokerEvents
+// https://github.com/asyncapi/net-sdk?tab=readme-ov-file#generate-code-first-asyncapi-documents
+// https://www.asyncapi.com/blog/understanding-asyncapis#adding-channels-operations-and-messages
+[AsyncApi]
+public class MessageBrokerEvents(IMessageBus bus) : IWolverineHandler
 {
     public const string PublicExchangeName = "asyncapi.events";
     public const string ConsumeQueue = "asyncapi.consume-queue";
 
-    public abstract Task PublishNotificationAsync(Notification message, CancellationToken cancellationToken = default);
 
-    public abstract Task PublishReconsumedNotificationAsync(
-        ReconsumedNotification message,
-        CancellationToken cancellationToken = default
-    );
+    [SubscribeOperation(typeof(Notification), Notification.RoutingKey, Summary = "Some summary for the event.", Description = "Some description for the event.")]
+    public async Task PublishNotificationAsync(Notification message, CancellationToken cancellationToken = default)
+    {
+        await bus.PublishAsync(message);
+    }
 
-    public abstract Task PublishCommandToOtherServiceAsync(
-        CommandToOtherService message,
-        CancellationToken cancellationToken = default
-    );
+    [SubscribeOperation(typeof(ReconsumedNotification), ReconsumedNotification.RoutingKey, Summary = "Some summary for the event.", Description = "Some description for the event.")]
+    public async Task PublishReconsumedNotificationAsync(ReconsumedNotification message, CancellationToken cancellationToken = default)
+    {
+        await bus.PublishAsync(message);
+    }
 
-    public abstract Task Handle(InboxMessage message);
+    [Channel(PublicExchangeName, Servers = ["rabbitmq"])]
+    [SubscribeOperation(typeof(CommandToOtherService), CommandToOtherService.RoutingKey, Summary = "Some summary for the event.", Description = "Some description for the event.")]
+    public async Task PublishCommandToOtherServiceAsync(CommandToOtherService message, CancellationToken cancellationToken = default)
+    {
+        await bus.PublishAsync(message);
+    }
+    
+    [PublishOperation(typeof(InboxMessage), InboxMessage.RoutingKey, Summary = "Some summary for the event.", Description = "Some description for the event.")]
+    public async Task Handle(InboxMessage message)
+    {
+        Console.WriteLine($"Received message {message.Id}");
+    }
 
-    public abstract Task Handle(ReconsumedNotification message);
+    [Channel(ConsumeQueue, Servers = ["rabbitmq"])]
+    [PublishOperation(typeof(ReconsumedNotification), ReconsumedNotification.RoutingKey, Summary = "Some summary for the event.", Description = "Some description for the event.")]
+    public async Task Handle(ReconsumedNotification message)
+    {
+        Console.WriteLine($"Received message {message.Id}");
+    }
 }

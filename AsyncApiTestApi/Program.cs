@@ -7,9 +7,8 @@
 #endregion
 
 using AsyncApiTestApi;
-using Neuroglia.AsyncApi;
-using Neuroglia.AsyncApi.Bindings.Amqp;
-using Neuroglia.Data.Schemas.Json;
+using Saunter;
+using Saunter.AsyncApiSchema.v2;
 using Wolverine;
 using Wolverine.Attributes;
 using Wolverine.RabbitMQ;
@@ -17,7 +16,7 @@ using Wolverine.RabbitMQ.Internal;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<MessageBrokerEvents, MessageBrokerEventsV2>();
+builder.Services.AddScoped<MessageBrokerEvents>();
 
 builder.UseWolverine(opts =>
 {
@@ -49,58 +48,37 @@ builder.UseWolverine(opts =>
     // This will disable the conventional local queue routing that would take precedence over other conventional routing
     opts.Policies.DisableConventionalLocalRouting();
 });
-builder.Services.AddAsyncApiGeneration(config => 
-    // config
-    //     .WithMarkupType<MessageBrokerEventsV3>()        
-    //     .UseDefaultV3DocumentConfiguration(asyncApi =>
-    //     {
-    //         asyncApi.WithServer("rabbitmq", server =>
-    //         {
-    //             server
-    //                 .WithHost("localhost:5672")
-    //                 .WithProtocol(AsyncApiProtocol.Amqp)
-    //                 .WithDescription("RabbitMQ server");
-    //         });
-    //     }));
-    config
-        .WithMarkupType<MessageBrokerEventsV2>() 
-        .UseDefaultV2DocumentConfiguration(asyncApi =>
+
+// Add Saunter to the application services. 
+builder.Services.AddAsyncApiSchemaGeneration(options =>
+{
+    // Specify example type(s) from assemblies to scan.
+    options.AssemblyMarkerTypes = [typeof(MessageBrokerEvents)];
+    
+    // Build as much (or as little) of the AsyncApi document as you like.
+    // Saunter will generate Channels, Operations, Messages, etc, but you
+    // may want to specify Info here.
+    options.Middleware.UiTitle = "AsyncApi Test Service";
+    options.AsyncApi = new AsyncApiDocument
+    {
+        Info = new Info("AsyncApi Test Service API", "1.0.0")
         {
-            // https://github.com/asyncapi/net-sdk?tab=readme-ov-file#asyncapi-v2
-            asyncApi.WithServer("rabbitmq", server =>
-            {
-                server
-                    .WithUrl(new Uri("amqp://localhost:5672"))
-                    .WithProtocol(AsyncApiProtocol.Amqp)
-                    .WithBinding(new AmqpServerBindingDefinition())
-                    .WithDescription("RabbitMQ server");
-            });
-            // asyncApi.WithChannel(MessageBrokerEvents.PublicExchangeName, channel =>
-            // {
-            //     channel
-            //         .WithDescription("Public exchange for outgoing events")
-            //         .WithBinding(new AmqpChannelBindingDefinition()
-            //         {
-            //             Exchange = new AmqpExchangeDefinition()
-            //             {
-            //                 Durable = true,
-            //                 Type = AmqpExchangeType.Topic,
-            //                 Name = MessageBrokerEvents.PublicExchangeName,
-            //             },
-            //             Type = AmqpChannelType.RoutingKey,
-            //         });
-            // });
-        }));
-builder.Services.AddRazorPages();
-builder.Services.AddAsyncApiUI();
-builder.Services.AddSingleton<IJsonSchemaResolver, JsonSchemaResolver>();
+            Description = "The Smartylighting Streetlights API allows you to remotely manage the city lights.",
+            License = new License("MIT")
+        },
+        Servers =
+        {
+            ["rabbitmq"] = new Server("localhost:5672", "amqp")
+        },
+    };
+});
 builder.Services.AddHttpClient();
 
 WebApplication app = builder.Build();
-app.UseStaticFiles();
 app.UseRouting();
+
 app.MapAsyncApiDocuments();
-app.MapRazorPages();
+app.MapAsyncApiUi();
 
 app.MapGet("/", () => "Hello World!");
 
