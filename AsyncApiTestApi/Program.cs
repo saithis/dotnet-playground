@@ -17,7 +17,7 @@ using Wolverine.RabbitMQ.Internal;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<MessageBrokerEvents, MessageBrokerEventsV3>();
+builder.Services.AddScoped<MessageBrokerEvents>();
 
 builder.UseWolverine(opts =>
 {
@@ -30,20 +30,27 @@ builder.UseWolverine(opts =>
 
     rabbit.DeclareExchange(MessageBrokerEvents.PublicExchangeName, x => { x.ExchangeType = ExchangeType.Topic; }).AutoProvision();
 
-    rabbit.DeclareQueue(MessageBrokerEvents.ConsumeQueue, c =>
+    rabbit.DeclareQueue(MessageBrokerEvents.InboxQueue, c =>
+        {
+            c.IsDurable = true;
+        })
+        .AutoProvision();
+    
+    rabbit.DeclareQueue(MessageBrokerEvents.SubscribeQueue, c =>
         {
             c.BindExchange(MessageBrokerEvents.PublicExchangeName, "#"); // read all our messages again for testing stuff
         })
         .AutoProvision();
 
-    opts.ListenToRabbitQueue(MessageBrokerEvents.ConsumeQueue)
+    opts.ListenToRabbitQueue(MessageBrokerEvents.InboxQueue)
+        .ProcessInline();
+    opts.ListenToRabbitQueue(MessageBrokerEvents.SubscribeQueue)
         .ProcessInline();
 
     opts.Discovery.CustomizeMessageDiscovery(c => { c.Includes.WithAttribute<MessageIdentityAttribute>(); });
 
     opts.PublishMessage<Notification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
     opts.PublishMessage<ReconsumedNotification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-    opts.PublishMessage<InboxMessage>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
     opts.PublishMessage<CommandToOtherService>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
 
     // This will disable the conventional local queue routing that would take precedence over other conventional routing
@@ -51,46 +58,34 @@ builder.UseWolverine(opts =>
 });
 builder.Services.AddAsyncApiGeneration(config => 
     config
-        .WithMarkupType<MessageBrokerEventsV3>()        
-        .UseDefaultV3DocumentConfiguration(asyncApi =>
+        .WithMarkupType<MessageBrokerEvents>() 
+        .UseDefaultV2DocumentConfiguration(asyncApi =>
         {
+            // https://github.com/asyncapi/net-sdk?tab=readme-ov-file#asyncapi-v2
             asyncApi.WithServer("rabbitmq", server =>
             {
                 server
-                    .WithHost("localhost:5672")
+                    .WithUrl(new Uri("amqp://localhost:5672"))
                     .WithProtocol(AsyncApiProtocol.Amqp)
+                    .WithBinding(new AmqpServerBindingDefinition())
                     .WithDescription("RabbitMQ server");
             });
+            // asyncApi.WithChannel(MessageBrokerEvents.PublicExchangeName, channel =>
+            // {
+            //     channel
+            //         .WithDescription("Public exchange for outgoing events")
+            //         .WithBinding(new AmqpChannelBindingDefinition()
+            //         {
+            //             Exchange = new AmqpExchangeDefinition()
+            //             {
+            //                 Durable = true,
+            //                 Type = AmqpExchangeType.Topic,
+            //                 Name = MessageBrokerEvents.PublicExchangeName,
+            //             },
+            //             Type = AmqpChannelType.RoutingKey,
+            //         });
+            // });
         }));
-    // config
-    //     .WithMarkupType<MessageBrokerEventsV2>() 
-    //     .UseDefaultV2DocumentConfiguration(asyncApi =>
-    //     {
-    //         // https://github.com/asyncapi/net-sdk?tab=readme-ov-file#asyncapi-v2
-    //         asyncApi.WithServer("rabbitmq", server =>
-    //         {
-    //             server
-    //                 .WithUrl(new Uri("amqp://localhost:5672"))
-    //                 .WithProtocol(AsyncApiProtocol.Amqp)
-    //                 .WithBinding(new AmqpServerBindingDefinition())
-    //                 .WithDescription("RabbitMQ server");
-    //         });
-    //         // asyncApi.WithChannel(MessageBrokerEvents.PublicExchangeName, channel =>
-    //         // {
-    //         //     channel
-    //         //         .WithDescription("Public exchange for outgoing events")
-    //         //         .WithBinding(new AmqpChannelBindingDefinition()
-    //         //         {
-    //         //             Exchange = new AmqpExchangeDefinition()
-    //         //             {
-    //         //                 Durable = true,
-    //         //                 Type = AmqpExchangeType.Topic,
-    //         //                 Name = MessageBrokerEvents.PublicExchangeName,
-    //         //             },
-    //         //             Type = AmqpChannelType.RoutingKey,
-    //         //         });
-    //         // });
-    //     }));
 builder.Services.AddRazorPages();
 builder.Services.AddAsyncApiUI();
 builder.Services.AddSingleton<IJsonSchemaResolver, JsonSchemaResolver>();
