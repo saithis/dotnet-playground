@@ -8,7 +8,6 @@
 
 using AsyncApiTestApi;
 using Neuroglia.AsyncApi;
-using Neuroglia.AsyncApi.Bindings.Amqp;
 using Neuroglia.Data.Schemas.Json;
 using Wolverine;
 using Wolverine.Attributes;
@@ -17,7 +16,7 @@ using Wolverine.RabbitMQ.Internal;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<MessageBrokerEvents, MessageBrokerEventsV3>();
+builder.Services.AddScoped<MessageBrokerEvents>();
 
 builder.UseWolverine(opts =>
 {
@@ -51,7 +50,7 @@ builder.UseWolverine(opts =>
 });
 builder.Services.AddAsyncApiGeneration(config => 
     config
-        .WithMarkupType<MessageBrokerEventsV3>()        
+        .WithMarkupType<MessageBrokerEvents>()        
         .UseDefaultV3DocumentConfiguration(asyncApi =>
         {
             asyncApi.WithServer("rabbitmq", server =>
@@ -62,35 +61,6 @@ builder.Services.AddAsyncApiGeneration(config =>
                     .WithDescription("RabbitMQ server");
             });
         }));
-    // config
-    //     .WithMarkupType<MessageBrokerEventsV2>() 
-    //     .UseDefaultV2DocumentConfiguration(asyncApi =>
-    //     {
-    //         // https://github.com/asyncapi/net-sdk?tab=readme-ov-file#asyncapi-v2
-    //         asyncApi.WithServer("rabbitmq", server =>
-    //         {
-    //             server
-    //                 .WithUrl(new Uri("amqp://localhost:5672"))
-    //                 .WithProtocol(AsyncApiProtocol.Amqp)
-    //                 .WithBinding(new AmqpServerBindingDefinition())
-    //                 .WithDescription("RabbitMQ server");
-    //         });
-    //         // asyncApi.WithChannel(MessageBrokerEvents.PublicExchangeName, channel =>
-    //         // {
-    //         //     channel
-    //         //         .WithDescription("Public exchange for outgoing events")
-    //         //         .WithBinding(new AmqpChannelBindingDefinition()
-    //         //         {
-    //         //             Exchange = new AmqpExchangeDefinition()
-    //         //             {
-    //         //                 Durable = true,
-    //         //                 Type = AmqpExchangeType.Topic,
-    //         //                 Name = MessageBrokerEvents.PublicExchangeName,
-    //         //             },
-    //         //             Type = AmqpChannelType.RoutingKey,
-    //         //         });
-    //         // });
-    //     }));
 builder.Services.AddRazorPages();
 builder.Services.AddAsyncApiUI();
 builder.Services.AddSingleton<IJsonSchemaResolver, JsonSchemaResolver>();
