@@ -21,7 +21,8 @@ namespace AsyncApiTestApi;
 public class MessageBrokerEvents(IMessageBus bus) : IWolverineHandler
 {
     public const string PublicExchangeName = "asyncapi.events";
-    public const string ConsumeQueue = "asyncapi.consume-queue";
+    public const string SubscribeQueue = "asyncapi.subscribe-queue";
+    public const string InboxQueue = "asyncapi.inbox-queue";
 
     [Operation(Notification.RoutingKey, V3OperationAction.Send, $"#/channels/{PublicExchangeName}",
         Description = "Send message", MessagePayloadType = typeof(Notification), Summary = "summary", Title = "title")]

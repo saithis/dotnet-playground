@@ -8,6 +8,7 @@
 
 using AsyncApiTestApi;
 using Neuroglia.AsyncApi;
+using Neuroglia.AsyncApi.Bindings.Amqp;
 using Neuroglia.Data.Schemas.Json;
 using Wolverine;
 using Wolverine.Attributes;
@@ -29,20 +30,27 @@ builder.UseWolverine(opts =>
 
     rabbit.DeclareExchange(MessageBrokerEvents.PublicExchangeName, x => { x.ExchangeType = ExchangeType.Topic; }).AutoProvision();
 
-    rabbit.DeclareQueue(MessageBrokerEvents.ConsumeQueue, c =>
+    rabbit.DeclareQueue(MessageBrokerEvents.InboxQueue, c =>
+        {
+            c.IsDurable = true;
+        })
+        .AutoProvision();
+
+    rabbit.DeclareQueue(MessageBrokerEvents.SubscribeQueue, c =>
         {
             c.BindExchange(MessageBrokerEvents.PublicExchangeName, "#"); // read all our messages again for testing stuff
         })
         .AutoProvision();
 
-    opts.ListenToRabbitQueue(MessageBrokerEvents.ConsumeQueue)
+    opts.ListenToRabbitQueue(MessageBrokerEvents.InboxQueue)
+        .ProcessInline();
+    opts.ListenToRabbitQueue(MessageBrokerEvents.SubscribeQueue)
         .ProcessInline();
 
     opts.Discovery.CustomizeMessageDiscovery(c => { c.Includes.WithAttribute<MessageIdentityAttribute>(); });
 
     opts.PublishMessage<Notification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
     opts.PublishMessage<ReconsumedNotification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-    opts.PublishMessage<InboxMessage>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
     opts.PublishMessage<CommandToOtherService>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
 
     // This will disable the conventional local queue routing that would take precedence over other conventional routing
@@ -58,7 +66,8 @@ builder.Services.AddAsyncApiGeneration(config =>
                 server
                     .WithHost("localhost:5672")
                     .WithProtocol(AsyncApiProtocol.Amqp)
-                    .WithDescription("RabbitMQ server");
+                    .WithDescription("RabbitMQ server")
+                    .WithBinding(new AmqpServerBindingDefinition());
             });
         }));
 builder.Services.AddRazorPages();
