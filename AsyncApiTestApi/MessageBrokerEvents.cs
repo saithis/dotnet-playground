@@ -1,6 +1,6 @@
 ﻿#region License
 
-// <copyright file="MessageBrokerEventsV2.cs" company="zvoove">
+// <copyright file="MessageBrokerEvents.cs" company="zvoove">
 //     Copyright (c) 2025 zvoove Group GmbH
 // </copyright>
 
@@ -21,35 +21,35 @@ public class MessageBrokerEvents(IMessageBus bus) : IWolverineHandler
     public const string SubscribeQueue = "asyncapi.consume-queue";
     public const string InboxQueue = "asyncapi.inbox-queue";
 
-    [Channel(PublicExchangeName)]
+    [Channel(PublicExchangeName + "/" + Notification.RoutingKey)]
     [PublishOperation(OperationId = Notification.RoutingKey, Summary = "Some summary for the event")]
     public async Task PublishNotificationAsync(Notification message, CancellationToken cancellationToken = default)
     {
         await bus.PublishAsync(message);
     }
 
-    [Channel(PublicExchangeName)]
+    [Channel(PublicExchangeName + "/" + ReconsumedNotification.RoutingKey)]
     [PublishOperation(OperationId = ReconsumedNotification.RoutingKey, Summary = "Some summary for the event")]
     public async Task PublishReconsumedNotificationAsync(ReconsumedNotification message, CancellationToken cancellationToken = default)
     {
         await bus.PublishAsync(message);
     }
 
-    [Channel(PublicExchangeName)]
+    [Channel(PublicExchangeName + "/" + CommandToOtherService.RoutingKey)]
     [PublishOperation(OperationId = CommandToOtherService.RoutingKey, Summary = "Some summary for the event")]
     public async Task PublishCommandToOtherServiceAsync(CommandToOtherService message, CancellationToken cancellationToken = default)
     {
         await bus.PublishAsync(message);
     }
 
-    [Channel(SubscribeQueue)]
+    [Channel(InboxQueue)]
     [SubscribeOperation(OperationId = InboxMessage.RoutingKey, Summary = "Some summary for the event")]
     public async Task Handle(InboxMessage message)
     {
         Console.WriteLine($"Received message {message.Id}");
     }
 
-    [Channel(PublicExchangeName)]
+    [Channel(SubscribeQueue)]
     [SubscribeOperation(OperationId = ReconsumedNotification.RoutingKey, Summary = "Some summary for the event")]
     public async Task Handle(ReconsumedNotification message)
     {
