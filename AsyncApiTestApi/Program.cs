@@ -29,6 +29,7 @@ builder.UseWolverine(opts =>
     });
 
     rabbit.DeclareExchange(MessageBrokerEvents.PublicExchangeName, x => { x.ExchangeType = ExchangeType.Topic; }).AutoProvision();
+    rabbit.DeclareExchange(MessageBrokerEvents.InternalExchangeName, x => { x.ExchangeType = ExchangeType.Topic; }).AutoProvision();
 
     rabbit.DeclareQueue(MessageBrokerEvents.InboxQueue, c =>
         {
@@ -38,7 +39,8 @@ builder.UseWolverine(opts =>
 
     rabbit.DeclareQueue(MessageBrokerEvents.SubscribeQueue, c =>
         {
-            c.BindExchange(MessageBrokerEvents.PublicExchangeName, "#"); // read all our messages again for testing stuff
+            c.BindExchange(MessageBrokerEvents.InternalExchangeName, "#"); // read all our messages again for testing stuff
+            c.BindExchange(MessageBrokerEvents.AuthzExchangeName, AuthzChanged.MessageType);
         })
         .AutoProvision();
 
@@ -49,9 +51,14 @@ builder.UseWolverine(opts =>
 
     opts.Discovery.CustomizeMessageDiscovery(c => { c.Includes.WithAttribute<MessageIdentityAttribute>(); });
 
-    opts.PublishMessage<Notification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-    opts.PublishMessage<ReconsumedNotification>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
-    opts.PublishMessage<CommandToOtherService>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, Notification.RoutingKey);
+    opts.PublishMessage<UserCreated>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, UserCreated.MessageType);
+    opts.PublishMessage<UserUpdated>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, UserUpdated.MessageType);
+    opts.PublishMessage<UserDeleted>().ToRabbitRoutingKey(MessageBrokerEvents.PublicExchangeName, UserDeleted.MessageType);
+    
+    // Technically this are not out events, but for testing we publish them anyway
+    rabbit.DeclareExchange(MessageBrokerEvents.AuthzExchangeName, x => { x.ExchangeType = ExchangeType.Topic; }).AutoProvision();
+    opts.PublishMessage<AuthzChanged>().ToRabbitRoutingKey(MessageBrokerEvents.AuthzExchangeName, AuthzChanged.MessageType);
+    opts.PublishMessage<DisableUser>().ToRabbitQueue(MessageBrokerEvents.InboxQueue);
 
     // This will disable the conventional local queue routing that would take precedence over other conventional routing
     opts.Policies.DisableConventionalLocalRouting();
@@ -120,9 +127,10 @@ app.MapGet("/", () => "Hello World!");
 
 app.MapGet("/send", async (MessageBrokerEvents bus) =>
 {
-    await bus.PublishNotificationAsync(new Notification { Id = Guid.NewGuid() });
-    await bus.PublishReconsumedNotificationAsync(new ReconsumedNotification { Id = Guid.NewGuid() });
-    await bus.PublishCommandToOtherServiceAsync(new CommandToOtherService { Id = Guid.NewGuid() });
+    await bus.PublishUserCreatedAsync(new UserCreated() { UserId = 1 });
+    await bus.PublishUserUpdatedAsync(new UserUpdated() { UserId = 1 });
+    await bus.PublishUserDeletedAsync(new UserDeleted() { UserId = 1 });
+    await bus.PublishInternalUserEventAsync(new InternalUserEvent() { UserId = 2 });
     return TypedResults.Ok("Messages sent");
 });
 
