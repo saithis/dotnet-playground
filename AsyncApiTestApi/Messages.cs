@@ -6,20 +6,14 @@
 
 #endregion
 
-using Neuroglia.AsyncApi.v3;
-using Wolverine;
 using Wolverine.Attributes;
 
 namespace AsyncApiTestApi;
 
 
 [MessageIdentity(MessageType)]
-[Message(
-    Name = MessageType, 
-    Title = "Internal event for updating the user", 
-    Summary = "Internal event for keeping user data in sync on update.",
-    ContentType = "application/json"
-    )]
+[AsyncApiMessage(MessageType, Summary = "Internal event for keeping user data in sync on update.")]
+[RabbitMqMessageBinding(MessageType = MessageType)]
 public record InternalUserEvent
 {
     public const string MessageType = "internal-user-event";
@@ -28,12 +22,8 @@ public record InternalUserEvent
 }
 
 [MessageIdentity(MessageType)]
-[Message(
-    Name = MessageType, 
-    Title = "User created event", 
-    Summary = "User was created.",
-    ContentType = "application/json"
-)]
+[AsyncApiMessage(MessageType, Summary = "User was created.")]
+[RabbitMqMessageBinding(MessageType = MessageType)]
 public record UserCreated
 {
     public const string MessageType = "user-created";
@@ -42,12 +32,8 @@ public record UserCreated
 }
 
 [MessageIdentity(MessageType)]
-[Message(
-    Name = MessageType, 
-    Title = "User updated event", 
-    Summary = "User was updated.",
-    ContentType = "application/json"
-)]
+[AsyncApiMessage(MessageType, Summary = "User was updated.")]
+[RabbitMqMessageBinding(MessageType = MessageType)]
 public record UserUpdated
 {
     public const string MessageType = "user-updated";
@@ -56,12 +42,8 @@ public record UserUpdated
 }
 
 [MessageIdentity(MessageType)]
-[Message(
-    Name = MessageType, 
-    Title = "User deleted event", 
-    Summary = "User was deleted.",
-    ContentType = "application/json"
-)]
+[AsyncApiMessage(MessageType, Summary = "User was deleted.")]
+[RabbitMqMessageBinding(MessageType = MessageType)]
 public record UserDeleted
 {
     public const string MessageType = "user-deleted";
@@ -70,12 +52,8 @@ public record UserDeleted
 }
 
 [MessageIdentity(MessageType)]
-[Message(
-    Name = MessageType, 
-    Title = "User disable command", 
-    Summary = "User is requested to be disabled.",
-    ContentType = "application/json"
-)]
+[AsyncApiMessage(MessageType, Summary = "User is requested to be disabled.")]
+[RabbitMqMessageBinding(MessageType = MessageType)]
 public record DisableUser
 {
     public const string MessageType = "disable-user";
@@ -84,12 +62,8 @@ public record DisableUser
 }
 
 [MessageIdentity(MessageType)]
-[Message(
-    Name = MessageType, 
-    Title = "Authorization changed event", 
-    Summary = "User authorization rules changed.",
-    ContentType = "application/json"
-)]
+[AsyncApiMessage(MessageType, Summary = "User authorization rules changed.")]
+[RabbitMqMessageBinding(MessageType = MessageType)]
 public record AuthzChanged
 {
     public const string MessageType = "authz-changed";
