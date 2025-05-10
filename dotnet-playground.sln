@@ -24,6 +24,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Consumer.Brighter", "Consum
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Producer.Brighter", "Producer.Brighter\Producer.Brighter.csproj", "{1C71BD34-0E4F-47C5-8A92-E77CB7D3CF92}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saithis.MessageBus", "Saithis.MessageBus\Saithis.MessageBus.csproj", "{D3BDB399-D06D-418C-90F1-2DBF8CEFB843}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saithis.MessageBus.EfCoreOutbox", "Saithis.MessageBus.EfCoreOutbox\Saithis.MessageBus.EfCoreOutbox.csproj", "{F2CC4D58-6FFF-4619-9D40-D22522130FB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saithis.MessageBus.RabbitMq", "Saithis.MessageBus.RabbitMq\Saithis.MessageBus.RabbitMq.csproj", "{E5932691-FCFD-4FE0-A01B-7BC85A6E523E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +72,18 @@ Global
 		{1C71BD34-0E4F-47C5-8A92-E77CB7D3CF92}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C71BD34-0E4F-47C5-8A92-E77CB7D3CF92}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C71BD34-0E4F-47C5-8A92-E77CB7D3CF92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3BDB399-D06D-418C-90F1-2DBF8CEFB843}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3BDB399-D06D-418C-90F1-2DBF8CEFB843}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3BDB399-D06D-418C-90F1-2DBF8CEFB843}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3BDB399-D06D-418C-90F1-2DBF8CEFB843}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2CC4D58-6FFF-4619-9D40-D22522130FB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2CC4D58-6FFF-4619-9D40-D22522130FB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2CC4D58-6FFF-4619-9D40-D22522130FB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2CC4D58-6FFF-4619-9D40-D22522130FB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5932691-FCFD-4FE0-A01B-7BC85A6E523E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5932691-FCFD-4FE0-A01B-7BC85A6E523E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5932691-FCFD-4FE0-A01B-7BC85A6E523E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5932691-FCFD-4FE0-A01B-7BC85A6E523E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{346C59E5-C093-4818-997F-E4EB79807A7D} = {B4D8F179-9720-407C-80CA-1D6BC8A4DD1E}

@@ -1,7 +1,10 @@
 ﻿using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace PlaygroundApi.OutboxPattern;
+namespace Saithis.MessageBus.EfCoreOutbox;
 
 public class OutboxProcessor<TDbContext>(
     IServiceScopeFactory serviceScopeFactory, 
@@ -72,7 +75,7 @@ public class OutboxProcessor<TDbContext>(
             using IServiceScope serviceScope = serviceScopeFactory.CreateScope();
 
             var dbContext = serviceScope.ServiceProvider.GetRequiredService<TDbContext>();
-            var sender = serviceScope.ServiceProvider.GetRequiredService<IOutboxMessageSender>();
+            var sender = serviceScope.ServiceProvider.GetRequiredService<IMessageSender>();
             while (true)
             {
                 logger.LogDebug("Checking outbox for unsent messages");
@@ -91,7 +94,7 @@ public class OutboxProcessor<TDbContext>(
                     foreach (var message in messages)
                     {
                         logger.LogInformation("Processing message '{Id}'", message.Id);
-                        await sender.SendAsync(message, stoppingToken);
+                        await sender.SendAsync(message.Content,message.GetProperties(), stoppingToken);
                         message.MarkAsProcessed(timeProvider);
                     }
                 }

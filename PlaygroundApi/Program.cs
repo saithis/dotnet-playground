@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using PlaygroundApi.Database;
 using PlaygroundApi.Database.Entities;
 using PlaygroundApi.Events;
-using PlaygroundApi.OutboxPattern;
+using Saithis.MessageBus;
+using Saithis.MessageBus.EfCoreOutbox;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,8 @@ var lockFileDirectory = new DirectoryInfo(Environment.CurrentDirectory); // choo
 builder.Services.AddSingleton<IDistributedLockProvider>(_ => new FileDistributedSynchronizationProvider(lockFileDirectory));
 
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+builder.Services.AddMessageBus();
 builder.Services.AddOutboxPattern<NotesDbContext>();
-builder.Services.AddSingleton<IOutboxMessageSender, NoopOutboxMessageSender>();
 builder.Services.AddDbContext<NotesDbContext>((sp, c) => c
     .UseInMemoryDatabase("notesDb")
     .RegisterOutbox<NotesDbContext>(sp));

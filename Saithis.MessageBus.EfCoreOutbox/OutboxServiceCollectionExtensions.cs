@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-namespace PlaygroundApi.OutboxPattern;
+namespace Saithis.MessageBus.EfCoreOutbox;
 
 public static class OutboxServiceCollectionExtensions
 {

@@ -1,9 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace PlaygroundApi.OutboxPattern;
+namespace Saithis.MessageBus.EfCoreOutbox;
 
-public class OutboxTriggerInterceptor<TDbContext>(OutboxProcessor<TDbContext> outboxProcessor, TimeProvider timeProvider) 
+public class OutboxTriggerInterceptor<TDbContext>(
+    OutboxProcessor<TDbContext> outboxProcessor, 
+    IMessageSerializer messageSerializer,
+    TimeProvider timeProvider) 
     : SaveChangesInterceptor where TDbContext : DbContext, IOutboxDbContext
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -21,12 +24,13 @@ public class OutboxTriggerInterceptor<TDbContext>(OutboxProcessor<TDbContext> ou
         if (context is not IOutboxDbContext outboxDbContext)
             throw new InvalidOperationException("Expected IOutboxDbContext");
 
-        foreach (var message in outboxDbContext.OutboxMessages)
+        foreach (var item in outboxDbContext.OutboxMessages.Queue)
         {
-            var outboxMessage = OutboxMessageEntity.Create(message, timeProvider);
+            var serializedMessage = messageSerializer.Serialize(item.Message, item.Properties);
+            var outboxMessage = OutboxMessageEntity.Create(serializedMessage, item.Properties, timeProvider);
             context.Set<OutboxMessageEntity>().Add(outboxMessage);
         }
-        outboxDbContext.OutboxMessages.Clear();
+        outboxDbContext.OutboxMessages.Queue.Clear();
 
         return ValueTask.FromResult(result);
     }

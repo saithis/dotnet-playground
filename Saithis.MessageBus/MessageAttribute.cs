@@ -1,4 +1,4 @@
-namespace PlaygroundApi.OutboxPattern;
+namespace Saithis.MessageBus;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class MessageAttribute(string name, string topic, string routeKey) : Attribute

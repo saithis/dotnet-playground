@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace PlaygroundApi.OutboxPattern;
+namespace Saithis.MessageBus.EfCoreOutbox;
 
 public static class OutboxDbContextOptionsBuilderExtensions
 {
@@ -10,7 +11,8 @@ public static class OutboxDbContextOptionsBuilderExtensions
     {
         var outboxProcessor = serviceProvider.GetRequiredService<OutboxProcessor<TDbContext>>();
         var timeProvider = serviceProvider.GetRequiredService<TimeProvider>();
-        var interceptor = new OutboxTriggerInterceptor<TDbContext>(outboxProcessor, timeProvider);
+        var messageSerializer = serviceProvider.GetRequiredService<IMessageSerializer>();
+        var interceptor = new OutboxTriggerInterceptor<TDbContext>(outboxProcessor, messageSerializer, timeProvider);
         return builder.AddInterceptors(interceptor);
     }
 }
