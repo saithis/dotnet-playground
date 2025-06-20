@@ -1,0 +1,16 @@
+﻿<Solution>
+  <Folder Name="/Brighter/">
+    <Project Path="Messaging\Brighter\Producer.Brighter\Producer.Brighter.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Rebus/">
+    <Project Path="Messaging\Rebus\Producer.Rebus\Producer.Rebus.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Wolverine/">
+    <Project Path="Messaging\Wolverine\Consumer\Consumer.csproj" Type="Classic C#" />
+    <Project Path="Messaging\Wolverine\Producer\Producer.csproj" Type="Classic C#" />
+    <Project Path="Messaging\Wolverine\WolverineConventions\WolverineConventions.csproj" Type="Classic C#" />
+  </Folder>
+  <Project Path="Logging\LogTestApi\LogTestApi.csproj" Type="Classic C#" />
+  <Project Path="PlaygroundApi\PlaygroundApi.csproj" Type="Classic C#" />
+  <Project Path="ProtobufApp\ProtobufApp.csproj" Type="Classic C#" />
+</Solution>

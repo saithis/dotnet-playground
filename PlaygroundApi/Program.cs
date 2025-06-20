@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlaygroundApi.Database;
 using PlaygroundApi.Database.Entities;
-using PlaygroundApi.Events;
-using Saithis.MessageBus;
-using Saithis.MessageBus.EfCoreOutbox;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,11 +12,8 @@ var lockFileDirectory = new DirectoryInfo(Environment.CurrentDirectory); // choo
 builder.Services.AddSingleton<IDistributedLockProvider>(_ => new FileDistributedSynchronizationProvider(lockFileDirectory));
 
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
-builder.Services.AddMessageBus();
-builder.Services.AddOutboxPattern<NotesDbContext>();
 builder.Services.AddDbContext<NotesDbContext>((sp, c) => c
-    .UseInMemoryDatabase("notesDb")
-    .RegisterOutbox<NotesDbContext>(sp));
+    .UseInMemoryDatabase("notesDb"));
 
 var app = builder.Build();
 
@@ -33,11 +27,6 @@ app.MapPost("/notes", async ([FromBody] NoteDto dto, [FromServices] NotesDbConte
         CreatedAt = DateTime.Now,
     };
     db.Notes.Add(note);
-    db.OutboxMessages.Add(new NoteAddedEvent
-    {
-        Id = note.Id,
-        Text = $"New Note: {dto.Text}",
-    });
     await db.SaveChangesAsync();
     return TypedResults.Ok(note);
 });

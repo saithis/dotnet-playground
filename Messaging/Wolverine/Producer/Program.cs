@@ -8,6 +8,7 @@
 
 using Wolverine;
 using Wolverine.Attributes;
+using Wolverine.EntityFrameworkCore;
 using WolverineConventions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -32,7 +33,7 @@ WebApplication app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet("/send", async (IMessageBus bus) =>
+app.MapGet("/send", async (IMessageBus bus, IDbContextOutbox outbox) =>
 {
     var message1 = new MyMessage { Id = Guid.NewGuid() };
     var message2 = new MyMessage2 { Id = Guid.NewGuid() };

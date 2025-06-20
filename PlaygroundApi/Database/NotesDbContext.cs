@@ -1,18 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PlaygroundApi.Database.Entities;
-using Saithis.MessageBus.EfCoreOutbox;
 
 namespace PlaygroundApi.Database;
 
-public class NotesDbContext(DbContextOptions<NotesDbContext> options) : DbContext(options), IOutboxDbContext
+public class NotesDbContext(DbContextOptions<NotesDbContext> options) : DbContext(options)
 {
     public DbSet<Note> Notes { get; set; }
-    public OutboxStagingCollection OutboxMessages { get; } = new();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<OutboxMessageEntity>();
-    }
 }
