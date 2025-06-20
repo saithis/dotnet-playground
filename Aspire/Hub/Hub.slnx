@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="HubApi\HubApi.csproj" Type="Classic C#" />
+  <Project Path="HubHost\HubHost.csproj" Type="Classic C#" />
+</Solution>

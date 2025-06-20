@@ -1,0 +1,8 @@
+﻿<Solution>
+  <Project Path="HostGateway\HostGateway.csproj" Type="Classic C#" />
+  <Project Path="Host\Host.csproj" Type="Classic C#" />
+  <Project Path="Hub\HubApi\HubApi.csproj" Type="Classic C#" />
+  <Project Path="Hub\HubHost\HubHost.csproj" Type="Classic C#" />
+  <Project Path="SSO\SsoApi\SsoApi.csproj" Type="Classic C#" />
+  <Project Path="SSO\SsoHost\SsoHost.csproj" Type="Classic C#" />
+</Solution>

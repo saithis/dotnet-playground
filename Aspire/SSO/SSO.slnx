@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="SsoApi\SsoApi.csproj" Type="Classic C#" />
+  <Project Path="SsoHost\SsoHost.csproj" Type="Classic C#" />
+</Solution>
