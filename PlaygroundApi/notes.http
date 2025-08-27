@@ -1,4 +1,7 @@
 ﻿### GET all notes
+GET http://localhost:5049/
+    
+### GET all notes
 GET http://localhost:5049/notes
 
 ### POST create note

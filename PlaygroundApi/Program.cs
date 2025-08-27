@@ -16,7 +16,15 @@ builder.Services.AddDbContext<NotesDbContext>((sp, c) => c
     .UseInMemoryDatabase("notesDb"));
 
 var app = builder.Build();
-
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.OnCompleted(async x =>
+    {
+        ctx.Connection.RequestClose();
+        await Task.Delay(TimeSpan.FromSeconds(10));
+    }, null!);
+    await next();
+});
 app.MapGet("/", () => "Hello World!");
 
 app.MapPost("/notes", async ([FromBody] NoteDto dto, [FromServices] NotesDbContext db) =>

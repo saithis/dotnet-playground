@@ -1,65 +1,27 @@
 using System.Text.Json;
 using ZLogger;
-using ZLogger.Formatters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddZLoggerConsole(c =>
-{
-    c.IncludeScopes = true;
-    c.CaptureThreadInfo = true;
-    c.UseJsonFormatter(formatter =>
+builder.Logging
+    .ClearProviders()
+    .AddZLoggerConsole(c =>
     {
-        formatter.UseUtcTimestamp = true;
-        
-        // Category and ScopeValues is manually write in AdditionalFormatter at labels so remove from include properties.
-        formatter.IncludeProperties = IncludeProperties.All;
-
-        formatter.JsonPropertyNames = JsonPropertyNames.Default with
+        c.IncludeScopes = true;
+        c.UseJsonFormatter(formatter =>
         {
-            LogLevel =  JsonEncodedText.Encode("severity"),
-            LogLevelNone = JsonEncodedText.Encode("default"),
-            LogLevelTrace = JsonEncodedText.Encode("trace"),
-            LogLevelDebug = JsonEncodedText.Encode("debug"),
-            LogLevelInformation = JsonEncodedText.Encode("info"),
-            LogLevelWarning = JsonEncodedText.Encode("warn"),
-            LogLevelError = JsonEncodedText.Encode("error"),
-            LogLevelCritical = JsonEncodedText.Encode("crit"),
-
-            Message = JsonEncodedText.Encode("message"),
-            Timestamp = JsonEncodedText.Encode("timestamp"),
-            
-        };
-
-        formatter.PropertyKeyValuesObjectName = JsonEncodedText.Encode("jsonPayload");
-
-        // cache JsonEncodedText outside of AdditionalFormatter
-        var labels = JsonEncodedText.Encode("logging.googleapis.com/labels");
-        var category = JsonEncodedText.Encode("category");
-        var eventId = JsonEncodedText.Encode("eventId");
-        var userId = JsonEncodedText.Encode("userId");
-
-        formatter.AdditionalFormatter = (Utf8JsonWriter writer, in LogInfo logInfo) =>
+            formatter.UseUtcTimestamp = true;
+        });
+    })
+    .AddZLoggerConsole(c =>
+    {
+        c.IncludeScopes = true;
+        c.UseJsonFormatter(formatter =>
         {
-            writer.WriteStartObject(labels);
-            writer.WriteString(category, logInfo.Category.JsonEncoded);
-            writer.WriteString(eventId, logInfo.EventId.Name);
-
-            if (logInfo.ScopeState != null && !logInfo.ScopeState.IsEmpty)
-            {
-                foreach (var item in logInfo.ScopeState.Properties)
-                {
-                    if (item.Key == "userId")
-                    {
-                        writer.WriteString(userId, item.Value!.ToString());
-                        break;
-                    }
-                }
-            }
-            writer.WriteEndObject();
-        };
+            formatter.UseUtcTimestamp = true;
+            formatter.PropertyKeyValuesObjectName = JsonEncodedText.Encode("Properties");
+        });
     });
-});
 
 
 var app = builder.Build();
@@ -67,15 +29,31 @@ var app = builder.Build();
 app.Use(async (ctx, next) =>
 {
     var logger = ctx.RequestServices.GetRequiredService<ILogger<Program>>();
-    using var scope = logger.BeginScope("My scope {Var}", 1);
-    using var scope2 = logger.BeginScope("My scope 2 {Var}", 2);
+    using var scope = logger.BeginScope("My scope message {MessageScopeVar}", "param of the message");
+    using var scope2 = logger.BeginScope(new Dictionary<string, object>
+    {
+        { "FirstScopedProperty", "first value" },
+        { "SecondScopedProperty", 2 },
+    });    
+    using var scope3 = logger.BeginScope(new Dictionary<string, object>
+    {
+        { "SingleScopedProperty", "only value" },
+    });
     await next();
 });
 
 app.MapGet("/", (ILogger<Program> logger) =>
 {
-    logger.LogError("This is an error");
+    logger.LogError("This is an error for {RequestPath}", "/");
     logger.ZLogError($"This is an error {1}");
+    try
+    {
+        throw new InvalidOperationException("This is an error");
+    }
+    catch (Exception e)
+    {
+        logger.LogError(e, "This is an error with value {MyCustomValue}", 1);
+    }
     return "Hello World!";
 });
 

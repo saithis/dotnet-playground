@@ -9,6 +9,7 @@
 using Wolverine;
 using Wolverine.Attributes;
 using Wolverine.EntityFrameworkCore;
+using Wolverine.Http;
 using WolverineConventions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -32,6 +33,7 @@ builder.UseWolverine(opts =>
 WebApplication app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
+app.MapDeadLettersEndpoints();
 
 app.MapGet("/send", async (IMessageBus bus, IDbContextOutbox outbox) =>
 {

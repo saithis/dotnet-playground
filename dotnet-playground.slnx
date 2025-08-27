@@ -6,9 +6,7 @@
     <Project Path="Messaging\Rebus\Producer.Rebus\Producer.Rebus.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/Wolverine/">
-    <Project Path="Messaging\Wolverine\Consumer\Consumer.csproj" Type="Classic C#" />
-    <Project Path="Messaging\Wolverine\Producer\Producer.csproj" Type="Classic C#" />
-    <Project Path="Messaging\Wolverine\WolverineConventions\WolverineConventions.csproj" Type="Classic C#" />
+    <Project Path="Messaging\Wolverine\WolverineApi\WolverineApi.csproj" Type="Classic C#" />
   </Folder>
   <Project Path="Logging\LogTestApi\LogTestApi.csproj" Type="Classic C#" />
   <Project Path="PlaygroundApi\PlaygroundApi.csproj" Type="Classic C#" />

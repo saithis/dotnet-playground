@@ -1,0 +1,13 @@
+﻿
+
+### Emit event
+GET http://localhost:5145/event
+
+
+###
+POST http://localhost:5145/dead-letters/
+Content-Type: application/json
+
+{
+  "Limit": 10
+}
