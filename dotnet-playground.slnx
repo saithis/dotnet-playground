@@ -9,6 +9,7 @@
     <Project Path="Messaging\Wolverine\WolverineApi\WolverineApi.csproj" Type="Classic C#" />
   </Folder>
   <Project Path="Logging\LogTestApi\LogTestApi.csproj" Type="Classic C#" />
+  <Project Path="OpenApiFluentValidationApi\OpenApiFluentValidationApi.csproj" Type="Classic C#" />
   <Project Path="PlaygroundApi\PlaygroundApi.csproj" Type="Classic C#" />
   <Project Path="ProtobufApp\ProtobufApp.csproj" Type="Classic C#" />
 </Solution>
