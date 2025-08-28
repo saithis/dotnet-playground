@@ -7,9 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
       <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="4.10.0" />
       <PackageReference Include="WolverineFx.Http" Version="4.10.0" />
       <PackageReference Include="WolverineFx.RabbitMQ" Version="4.10.0" />
+      <PackageReference Include="WolverineFx.SqlServer" Version="4.10.0" />
     </ItemGroup>
 
 </Project>

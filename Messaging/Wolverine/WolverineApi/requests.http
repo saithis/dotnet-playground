@@ -3,6 +3,8 @@
 ### Emit event
 GET http://localhost:5145/event
 
+### Emit event that fails to handle
+GET http://localhost:5145/event/error
 
 ###
 POST http://localhost:5145/dead-letters/
