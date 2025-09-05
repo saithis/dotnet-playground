@@ -16,7 +16,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
         <PackageReference Include="Microsoft.Extensions.Logging" />
-        <PackageReference Include="xunit" />
+        <PackageReference Include="TUnit" />
     </ItemGroup>
 
 </Project>

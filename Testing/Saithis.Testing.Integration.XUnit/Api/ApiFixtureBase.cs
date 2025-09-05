@@ -2,9 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Saithis.Testing.Integration.XUnit.Service;
-using Xunit.Abstractions;
-
-namespace Saithis.Testing.Integration.XUnit.Api;
+using TUnit.Core;
 
 public abstract class ApiFixtureBase<TWebApplicationFactory, TEntryPoint> : IServiceFxiture
     where TWebApplicationFactory : WebApplicationFactory<TEntryPoint>
@@ -13,8 +11,6 @@ public abstract class ApiFixtureBase<TWebApplicationFactory, TEntryPoint> : ISer
     private HttpClient? _clientAnonymous;
     public required TWebApplicationFactory WebApplicationFactory { get; init; }
     public HttpClient ClientAnonymous => _clientAnonymous ??= WebApplicationFactory.Server.CreateClient();
-
-    public ITestOutputHelper? TestOutputHelper { get; set; }
 
     public IServiceScopeFactory ServiceScopeFactory =>
         WebApplicationFactory.Server.Services.GetRequiredService<IServiceScopeFactory>();

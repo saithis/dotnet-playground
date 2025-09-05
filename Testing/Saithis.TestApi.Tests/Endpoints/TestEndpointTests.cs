@@ -4,15 +4,13 @@ using Saithis.TestApi.Db.Entities;
 using Saithis.TestApi.Endpoints;
 using Saithis.TestApi.Tests.Base.Api;
 using Saithis.Testing.Integration.XUnit.Assertion;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Saithis.TestApi.Tests.Endpoints;
 
-public class TestEndpointTests(ApiFixture fixture, ITestOutputHelper output)
-    : ApiTest(fixture, DbResetOptions.Test, output)
+public class TestEndpointTests(ApiFixture fixture)
+    : ApiTest(fixture, DbResetOptions.Test)
 {
-    [Fact]
+    [Test]
     public async Task Should_Return_404_When_No_Item_Found()
     {
         // Arrange
@@ -25,7 +23,7 @@ public class TestEndpointTests(ApiFixture fixture, ITestOutputHelper output)
         await ApiAssert.ProblemResponseAsync(response, HttpStatusCode.NotFound, "NOT_FOUND");
     }
 
-    [Fact]
+    [Test]
     public async Task Should_Overwrite_Name_When_Item_Found()
     {
         // Arrange
@@ -43,10 +41,10 @@ public class TestEndpointTests(ApiFixture fixture, ITestOutputHelper output)
         await InScopeAsync(async ctx =>
         {
             var dto = await ApiAssert.ResponseAsync<TestEndpoint.ResponseDto>(response, HttpStatusCode.OK);
-            Assert.Equal("I am module 1", dto!.Message);
+            await Assert.That(dto!.Message).IsEqualTo("I am module 1");
 
             DummyItem dummyItem = await ctx.DummyDbContext.DummyItems.SingleAsync();
-            Assert.Equal("Overwritten", dummyItem.Name);
+            await Assert.That(dummyItem.Name).IsEqualTo("Overwritten");
         });
     }
 }

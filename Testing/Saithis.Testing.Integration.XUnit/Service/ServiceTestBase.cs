@@ -1,7 +1,6 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Saithis.Testing.Integration.XUnit.EFCore;
-using Xunit;
 
 namespace Saithis.Testing.Integration.XUnit.Service;
 
@@ -9,7 +8,7 @@ namespace Saithis.Testing.Integration.XUnit.Service;
 /// You have to inherit from this class to create a base class for your test classes.
 /// This handles setup and cleanup calls to your fisture and provides a way to create a scope context for your tests.
 /// </summary>
-public abstract class ServiceTestBase<TFixture, TScope>(TFixture fixture) : IAsyncLifetime
+public abstract class ServiceTestBase<TFixture, TScope>(TFixture fixture)
     where TFixture : IServiceFxiture
     where TScope : ServiceScopeContext
 {
@@ -19,7 +18,8 @@ public abstract class ServiceTestBase<TFixture, TScope>(TFixture fixture) : IAsy
 
     protected TFixture Fixture { get; init; } = fixture;
 
-    public async Task InitializeAsync()
+    [Before(Test)]
+    public async Task InitializeTestAsync()
     {
         IsFirstClassInit = Initialized.Add(GetType().FullName ?? GetType().Name);
 

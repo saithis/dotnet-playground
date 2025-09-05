@@ -4,26 +4,35 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Xunit;
-using Xunit.Sdk;
+using TUnit.Assertions;
+using TUnit.Core;
 
 namespace Saithis.Testing.Integration.XUnit.Assertion;
 
 public static class ApiAssert
 {
-    public static void ProblemDetailsResult(IResult result, int statusCode, string code)
+    public static async Task ProblemDetailsResult(IResult result, int statusCode, string code)
     {
-        var problem = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(statusCode, problem.StatusCode);
-        var baseProblem = Assert.IsType<ProblemDetails>(problem.ProblemDetails);
-        AssertProblemDetails(baseProblem, statusCode, code);
+        if (result is not ProblemHttpResult problem)
+            throw new Exception($"Expected ProblemHttpResult but got {result.GetType().Name}");
+        
+        await Assert.That(problem.StatusCode).IsEqualTo(statusCode);
+        
+        if (problem.ProblemDetails is not ProblemDetails baseProblem)
+            throw new Exception($"Expected ProblemDetails but got {problem.ProblemDetails?.GetType().Name ?? "null"}");
+            
+        await AssertProblemDetails(baseProblem, statusCode, code);
     }
 
-    public static T OkResult<T>(IResult result)
+    public static Task<T> OkResult<T>(IResult result)
     {
-        var okResult = Assert.IsType<Ok<T>>(result);
-        var dto = Assert.IsType<T>(okResult.Value);
-        return dto;
+        if (result is not Ok<T> okResult)
+            throw new Exception($"Expected Ok<{typeof(T).Name}> but got {result.GetType().Name}");
+        
+        if (okResult.Value is not T dto)
+            throw new Exception($"Expected {typeof(T).Name} but got {okResult.Value?.GetType().Name ?? "null"}");
+            
+        return Task.FromResult(dto);
     }
 
     public static async Task ResponseAsync(HttpResponseMessage response, HttpStatusCode expected)
@@ -33,7 +42,7 @@ public static class ApiAssert
             string body = await response.Content.ReadAsStringAsync();
             string message = $"AssertStatusCode() Failure: Values differ{Environment.NewLine}" +
                              $"Expected: {expected}{Environment.NewLine}Actual: {response.StatusCode}{Environment.NewLine}Body:{body}";
-            throw new XunitException(message);
+            throw new Exception(message);
         }
     }
 
@@ -61,14 +70,14 @@ public static class ApiAssert
             string body = await response.Content.ReadAsStringAsync();
             string message = $"AssertStatusCode() Failure: Values differ{Environment.NewLine}" +
                              $"Expected: {statusCode}{Environment.NewLine}Actual: {response.StatusCode}{Environment.NewLine}Body:{body}";
-            throw new XunitException(message);
+            throw new Exception(message);
         }
 
         try
         {
             var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-            Assert.NotNull(problemDetails);
-            AssertProblemDetails(problemDetails, (int) statusCode, type);
+            await Assert.That(problemDetails).IsNotNull();
+            await AssertProblemDetails(problemDetails, (int) statusCode, type);
             return problemDetails;
         }
         catch (Exception e)
@@ -76,7 +85,7 @@ public static class ApiAssert
             string body = await response.Content.ReadAsStringAsync();
             string message = $"ProblemResponse() Failure: Values differ{Environment.NewLine}" +
                              $"Expected ProblemDetails{Environment.NewLine}Actual Body:{body}";
-            throw new XunitException(message, e);
+            throw new Exception(message, e);
         }
     }
 
@@ -88,14 +97,14 @@ public static class ApiAssert
             string body = await response.Content.ReadAsStringAsync();
             string message = $"AssertStatusCode() Failure: Values differ{Environment.NewLine}" +
                              $"Expected: {HttpStatusCode.BadRequest}{Environment.NewLine}Actual: {response.StatusCode}{Environment.NewLine}Body:{body}";
-            throw new XunitException(message);
+            throw new Exception(message);
         }
 
         try
         {
             var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
-            Assert.NotNull(problemDetails);
-            Assert.NotEmpty(problemDetails.Errors);
+            await Assert.That(problemDetails).IsNotNull();
+            await Assert.That(problemDetails.Errors).IsNotEmpty();
             return problemDetails;
         }
         catch (Exception e)
@@ -103,15 +112,15 @@ public static class ApiAssert
             string body = await response.Content.ReadAsStringAsync();
             string message = $"ProblemResponse() Failure: Values differ{Environment.NewLine}" +
                              $"Expected HttpValidationProblemDetails{Environment.NewLine}Actual Body:{body}";
-            throw new XunitException(message, e);
+            throw new Exception(message, e);
         }
     }
 
-    private static void AssertProblemDetails(ProblemDetails problem, int statusCode, string type)
+    private static async Task AssertProblemDetails(ProblemDetails problem, int statusCode, string type)
     {
-        Assert.Equal(statusCode, problem.Status);
-        Assert.Equal(type, problem.Type);
-        Assert.NotNull(problem.Title);
-        Assert.NotEmpty(problem.Title);
+        await Assert.That(problem.Status).IsEqualTo(statusCode);
+        await Assert.That(problem.Type).IsEqualTo(type);
+        await Assert.That(problem.Title).IsNotNull();
+        await Assert.That(problem.Title).IsNotEmpty();
     }
 }

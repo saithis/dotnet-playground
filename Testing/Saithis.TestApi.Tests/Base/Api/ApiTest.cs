@@ -1,13 +1,14 @@
-﻿using Saithis.Testing.Integration.XUnit.Api;
-using Xunit;
-using Xunit.Abstractions;
+﻿using Microsoft.Extensions.Logging;
+using Saithis.Testing.Integration.XUnit.Api;
+using TUnit.Core;
 
 namespace Saithis.TestApi.Tests.Base.Api;
 
-[Collection(nameof(ApiFixture))]
+[ClassDataSource(typeof(ApiFixture), Shared = [SharedType.PerTestSession])]
+[NotInParallel]
 public class ApiTest : ApiTestBase<ApiFixture, ApiWebApplicationFactory<Program>, Program, ScopeContext>
 {
-    public ApiTest(ApiFixture fixture, DbResetOptions dbResetOptions, ITestOutputHelper output) : base(fixture, output)
+    public ApiTest(ApiFixture fixture, DbResetOptions dbResetOptions) : base(fixture)
     {
         RegisterDbResetMode(Fixture.DummyDbContextManager, dbResetOptions.Dummy);
     }

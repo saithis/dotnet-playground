@@ -3,17 +3,11 @@ using Microsoft.Extensions.Time.Testing;
 using Saithis.TestApi.Db;
 using Saithis.Testing.Integration.XUnit.Api;
 using Saithis.Testing.Integration.XUnit.EFCore;
-using Xunit;
+using TUnit.Core;
 
 namespace Saithis.TestApi.Tests.Base.Api;
 
-[CollectionDefinition(nameof(ApiFixture))]
-public class TestWebApiCollectionMarker : ICollectionFixture<ApiFixture>
-{
-    // This class has no code, and is never created. Its purpose is simply
-    // to be the place to apply [CollectionDefinition] and all the
-    // ICollectionFixture<> interfaces.
-}
+// TUnit doesn't use collection definitions like XUnit
 
 public sealed class ApiFixture : ApiFixtureBase<ApiWebApplicationFactory<Program>, Program>
 {
@@ -22,7 +16,6 @@ public sealed class ApiFixture : ApiFixtureBase<ApiWebApplicationFactory<Program
         WebApplicationFactory = new ApiWebApplicationFactory<Program>(
             new ApiWebApplicationFactoryOptions
             {
-                TestOutputHelper = () => TestOutputHelper,
                 ConfigureTestServices = services =>
                 {
                     services.AddScoped<TimeProvider>(_ => TimeProviderOverride ?? TimeProvider.System);

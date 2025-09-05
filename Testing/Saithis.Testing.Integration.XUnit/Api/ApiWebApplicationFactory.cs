@@ -12,7 +12,7 @@ public class ApiWebApplicationFactory<TStartup>(ApiWebApplicationFactoryOptions 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder
-            .AddIntegrationTestDefaults(options.TestOutputHelper, options.SetupMockAuthentication)
+            .AddIntegrationTestDefaults(options.SetupMockAuthentication)
             .ConfigureTestServices(options.ConfigureTestServices);
     }
 }
