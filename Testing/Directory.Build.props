@@ -1,0 +1,11 @@
+<Project>
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+        <Nullable>enable</Nullable>
+        <AnalysisMode>Recommended</AnalysisMode>
+        <!-- https://learn.microsoft.com/en-us/dotnet/core/project-sdk/overview#implicit-using-directives -->
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!-- Don't fail on vulnerabilities, audit pipeline takes care of this. And CI mustn't be blocked while we fix it. -->
+        <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    </PropertyGroup>
+</Project>

@@ -5,6 +5,13 @@
   <Folder Name="/Rebus/">
     <Project Path="Messaging\Rebus\Producer.Rebus\Producer.Rebus.csproj" Type="Classic C#" />
   </Folder>
+  <Folder Name="/Testing/">
+    <Project Path="Testing\Saithis.TestApi.Tests\Saithis.TestApi.Tests.csproj" Type="Classic C#" />
+    <Project Path="Testing\Saithis.TestApi\Saithis.TestApi.csproj" Type="Classic C#" />
+    <Project Path="Testing\Saithis.Testing.Integration.XUnit\Saithis.Testing.Integration.XUnit.csproj" Type="Classic C#" />
+    <File Path="Testing\Directory.Build.props" />
+    <File Path="Testing\Directory.Packages.props" />
+  </Folder>
   <Folder Name="/Wolverine/">
     <Project Path="Messaging\Wolverine\WolverineApi\WolverineApi.csproj" Type="Classic C#" />
   </Folder>

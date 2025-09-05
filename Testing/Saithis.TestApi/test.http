@@ -1,0 +1,69 @@
+@base=http://localhost:5097
+
+### Hello world!
+
+GET {{base}}/
+
+### Problem details
+
+GET {{base}}/test?problem=true
+
+### Endpoint
+
+GET {{base}}/test
+
+### Validation ok
+
+POST {{base}}/validation/body
+Content-Type: application/json
+
+{
+  "prop": "1234"
+}
+
+### Validation failed
+
+POST {{base}}/validation/body
+Content-Type: application/json
+
+{
+    "prop": "12"
+}
+
+### Validation form ok
+
+POST {{base}}/validation/form
+Content-Type: multipart/form-data; boundary=---------------------------9051914041544843365972754266
+
+-----------------------------9051914041544843365972754266
+Content-Disposition: form-data; name="Prop"
+
+asdf
+-----------------------------9051914041544843365972754266--
+
+### Validation form failed
+
+POST {{base}}/validation/form
+Content-Type: multipart/form-data; boundary=---------------------------9051914041544843365972754266
+
+-----------------------------9051914041544843365972754266
+Content-Disposition: form-data; name="Prop"
+
+as
+-----------------------------9051914041544843365972754266--
+
+### Validation form null
+
+POST {{base}}/validation/form
+Content-Type: multipart/form-data; boundary=---------------------------9051914041544843365972754266
+
+-----------------------------9051914041544843365972754266
+Content-Disposition: form-data; name="asdf"
+
+as
+-----------------------------9051914041544843365972754266--
+
+
+### Module 1
+
+GET {{base}}/module1/test
