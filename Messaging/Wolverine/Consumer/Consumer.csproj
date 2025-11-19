@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="3.9.1" />
-      <PackageReference Include="WolverineFx.RabbitMQ" Version="3.9.1" />
+      <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="5.2.0" />
+      <PackageReference Include="WolverineFx.RabbitMQ" Version="5.2.0" />
     </ItemGroup>
 
     <ItemGroup>

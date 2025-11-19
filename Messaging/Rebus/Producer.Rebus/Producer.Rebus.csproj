@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Rebus.RabbitMq" Version="10.0.0" />
-      <PackageReference Include="Rebus.ServiceProvider" Version="10.3.0" />
+      <PackageReference Include="Rebus.RabbitMq" Version="10.1.0" />
+      <PackageReference Include="Rebus.ServiceProvider" Version="10.7.0" />
     </ItemGroup>
 
 </Project>

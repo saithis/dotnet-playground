@@ -1,9 +1,9 @@
+using System.Text;
 using System.Diagnostics;
 using System.Text.Json;
 using Paramore.Brighter;
 using Paramore.Brighter.Extensions.DependencyInjection;
-using Paramore.Brighter.MessagingGateway.RMQ;
-using Paramore.Brighter.Transforms.Attributes;
+using Paramore.Brighter.MessagingGateway.RMQ.Async;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,8 +12,8 @@ builder.Services.AddSingleton<IAmAMessageTransformAsync, Transformer>();
 
 builder.Services.AddBrighter(c =>
 {
-    
-}).UseExternalBus(c =>
+
+}).AddProducers(c =>
 {
     c.ProducerRegistry = new RmqProducerRegistryFactory(
         new RmqMessagingGatewayConnection
@@ -56,7 +56,20 @@ app.Run();
 public record MyMessage : IEvent
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string? CorrelationId { get; set; }
     public Activity Span { get; set; }
+
+    Paramore.Brighter.Id IRequest.Id
+    {
+        get => new Paramore.Brighter.Id(Id);
+        set => Id = value.Value;
+    }
+
+    Paramore.Brighter.Id? IRequest.CorrelationId
+    {
+        get => string.IsNullOrEmpty(CorrelationId) ? null : new Paramore.Brighter.Id(CorrelationId);
+        set => CorrelationId = value?.Value;
+    }
 }
 
 public class MyMessageMessageMapper : IAmAMessageMapperAsync<MyMessage>
@@ -64,11 +77,11 @@ public class MyMessageMessageMapper : IAmAMessageMapperAsync<MyMessage>
     public Message MapToMessage(MyMessage request, Publication publication)
     {
         var header = new MessageHeader(
-            messageId: request.Id, 
-            topic: new RoutingKey("my-default-route-key"), 
-            messageType: MessageType.MT_EVENT); 
+            messageId: request.Id,
+            topic: new RoutingKey("my-default-route-key"),
+            messageType: MessageType.MT_EVENT);
         var payload = JsonSerializer.Serialize(request, new JsonSerializerOptions(JsonSerializerDefaults.General));
-        var body = new MessageBody(payload, "application/json", CharacterEncoding.UTF8);
+        var body = new MessageBody(new Memory<byte>(Encoding.UTF8.GetBytes(payload)));
         var message = new Message(header, body);
         message.Header.Bag.Add("MyCustomHeader", request.Span?.Id);
         return message;
@@ -76,7 +89,7 @@ public class MyMessageMessageMapper : IAmAMessageMapperAsync<MyMessage>
 
     public MyMessage MapToRequest(Message message)
     {
-        return JsonSerializer.Deserialize<MyMessage>(message.Body.Value, JsonSerialisationOptions.Options);
+        return JsonSerializer.Deserialize<MyMessage>(message.Body.Value, new JsonSerializerOptions(JsonSerializerDefaults.General));
     }
 
     public async Task<Message> MapToMessageAsync(MyMessage request, Publication publication,
@@ -100,11 +113,11 @@ public class Transformer : IAmAMessageTransformAsync
         // TODO release managed resources here
     }
 
-    public void InitializeWrapFromAttributeParams(params object[] initializerList)
+    public void InitializeWrapFromAttributeParams(params object?[] initializerList)
     {
     }
 
-    public void InitializeUnwrapFromAttributeParams(params object[] initializerList)
+    public void InitializeUnwrapFromAttributeParams(params object?[] initializerList)
     {
     }
 
